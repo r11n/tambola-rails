@@ -5,7 +5,7 @@ class Game
   SEQUENCE = (0..90).to_a
   attr_reader :count, :tickets
   def initialize(persons = 1)
-    @count = persons
+    @count = [persons + 3, 720].min
     generate_sub_sequences
     generate_tickets
   end
@@ -18,7 +18,7 @@ class Game
 
   def generate_tickets
     @tickets = []
-    (count + 3).times do |i|
+    count.times do |i|
       @tickets << build_ticket(i)
     end
   end
@@ -27,7 +27,7 @@ class Game
     @sub_sequences = []
     9.times do |i|
       @sub_sequences.push(
-        SEQUENCE[(10 * i) + 1, 10].permutation(3).to_a.sample(count + 3)
+        SEQUENCE[(10 * i) + 1, 10].permutation(3).to_a.sample(count)
       )
     end
   end

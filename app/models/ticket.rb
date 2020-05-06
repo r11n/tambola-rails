@@ -42,7 +42,6 @@ class Ticket
   end
 
   def arrange_set(set)
-    puts set.join(',')
     set_column(*set) if set.size == 3
     return if set.size == 3
 
