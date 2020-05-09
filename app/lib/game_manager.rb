@@ -73,6 +73,7 @@ module GameManager
       hash['current_pick'] = nil
       hash['events'] = GENERAL_EVENTS
       hash['status'] = 'started'
+      hash['id'] = game_id
     end
   end
 
