@@ -3,15 +3,30 @@
 # Game handler
 class Game
   SEQUENCE = (0..90).to_a
-  attr_reader :count, :tickets
+  attr_reader :count, :tickets, :ticket_grids, :requested_count, :game_hash
   def initialize(persons = 1)
+    @requested_count = persons
     @count = [persons + 3, 720].min
     generate_sub_sequences
     generate_tickets
   end
 
   def map_tickets
-    tickets.map { |ticket| Ticket.new(ticket) }
+    return if @ticket_grids.present?
+
+    @ticket_grids = tickets.map { |ticket| Ticket.new(ticket).grid }
+  end
+
+  def jsonize
+    map_tickets
+    temp = as_json
+    temp.delete 'tickets'
+    temp.delete 'sub_sequences'
+    @game_hash = temp
+  end
+
+  def self.generate_number_outcome
+    SEQUENCE[1, 90].shuffle
   end
 
   private
