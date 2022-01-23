@@ -3,9 +3,10 @@
 # a class to generate ticket grid
 class Ticket
   attr_reader :grid, :numbers, :row_proc, :row_size, :row_values, :sets
+
   def initialize(numbers)
     @numbers = numbers
-    @jproc = proc { |a, b| '+' + (1..b).map { ''.rjust(a, '-') }.join('+') + '+'}
+    @jproc = proc { |a, b| '+' + (1..b).map { ''.rjust(a, '-') }.join('+') + '+' }
     generate_sets
     arrange_grid
   end
@@ -14,7 +15,7 @@ class Ticket
     puts @jproc.call(2, 9)
     3.times do |a|
       row = row_values.call(a)
-      puts "|#{row.map { |aa| aa.to_s.rjust(2,' ') }.join('|')}|"
+      puts "|#{row.map { |aa| aa.to_s.rjust(2, ' ') }.join('|')}|"
       puts @jproc.call(2, 9)
     end
     nil
@@ -88,9 +89,10 @@ class Ticket
     9.times do |q|
       col = column(q)
       sz = col.reject(&:nil?).size
-      if sz == 3
+      case sz
+      when 3
         set_column(*col.sort, q)
-      elsif sz == 2
+      when 2
         col = swap_positions(col)
         set_column(*col, q)
       end

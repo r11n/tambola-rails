@@ -1,5 +1,11 @@
+# frozen_string_literal: true
+
+# Manager for game
 module GameManager
   attr_reader :game_id, :game, :game_data
+
+  include GameCleaner
+
   STORAGE_DIR = Rails.public_path.join('games')
   GAME_STATUSES = %w[started completed].freeze
   GENERAL_EVENTS = [
@@ -24,6 +30,7 @@ module GameManager
     },
     { name: 'Full Housie', position_based: false, required_count: 15 }
   ].freeze
+
   def init_new_game(count = 1)
     return {} if count.blank?
 
@@ -44,15 +51,18 @@ module GameManager
 
   def next_pick(id); end
 
-  private
+  def delete_game(id)
+    raise GameRecordMissingError unless file_exists?(fname_for(id))
 
-  # adds suffix .json to game id which serves as file name
-  def fname_for(id)
-    "#{fprefix(id)}.json"
+    delete_file(fname_for(id))
   end
+
+  private
 
   # loads game data from given :id
   def load_game(id)
+    raise GameRecordMissingError unless file_exists?(fname_for(id))
+
     @game_data = JSON.parse(safe_read(fname_for(id)))
   end
 
@@ -90,20 +100,10 @@ module GameManager
     @game = Game.new count
   end
 
-  def safe_read(fname)
-    File.read(storage_path.join(fname))
-  rescue
-    file = File.open(storage_path.join(fname), w)
-    file.close
-    '{}'
-  end
-
-  def storage_path
-    Dir.mkdir(STORAGE_DIR) unless File.directory? STORAGE_DIR
-    STORAGE_DIR
-  end
-
-  def fprefix(id)
-    "#{current_pin}-#{id}"
+  # Custom error for missing game
+  class GameRecordMissingError < StandardError
+    def initialize(msg = 'game not found or deleted')
+      super
+    end
   end
 end

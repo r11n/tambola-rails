@@ -4,6 +4,7 @@
 class Game
   SEQUENCE = (0..90).to_a
   attr_reader :count, :tickets, :ticket_grids, :requested_count, :game_hash
+
   def initialize(persons = 1)
     @requested_count = persons
     @count = [persons + 3, 720].min
@@ -52,7 +53,6 @@ class Game
     @sub_sequences.each do |sequence|
       ticket << sequence[index]
     end
-    ticket = ticket.flatten.sample(15).sort
-    ticket
+    ticket.flatten.sample(15).sort
   end
 end

@@ -5,6 +5,7 @@ module PinAuthentication
   # TODO: @r11n please change the static pins to a dynamic source
   PINS = %w[500081 533233 534102 500033 533308 535002].freeze
   attr_reader :current_pin
+
   def authenticate(headers = {})
     @headers = headers
     check_pin
