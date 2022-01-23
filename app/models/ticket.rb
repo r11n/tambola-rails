@@ -12,11 +12,11 @@ class Ticket
   end
 
   def print_grid
-    puts @jproc.call(2, 9)
+    Rails.logger.debug @jproc.call(2, 9)
     3.times do |a|
       row = row_values.call(a)
-      puts "|#{row.map { |aa| aa.to_s.rjust(2, ' ') }.join('|')}|"
-      puts @jproc.call(2, 9)
+      Rails.logger.debug "|#{row.map { |aa| aa.to_s.rjust(2, ' ') }.join('|')}|"
+      Rails.logger.debug @jproc.call(2, 9)
     end
     nil
   end
@@ -116,7 +116,7 @@ class Ticket
     row_index = ((row % 3) * 9) + pos
     current = grid[row_index]
     grid[row_index] = number if current.blank?
-    return unless current.present?
+    return if current.blank?
 
     gt = number > current
     if gt
