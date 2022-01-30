@@ -3,8 +3,10 @@
 # Controller class of game
 class GamesController < ApplicationController
   include GameManager
-  before_action :authenticate_request
-  def index; end
+  before_action :authenticate_request, except: :index
+  def index
+    render json: { message: :ok }
+  end
 
   def show
     render json: load_game(params[:id])
@@ -28,7 +30,23 @@ class GamesController < ApplicationController
     render json: { message: 'successfully deleted all the operator games' }
   end
 
-  def add_player; end
+  def add_player
+    build_players(params[:id], player_params[:players])
+    render json: { message: 'Players successfully added to the game' }
+  end
 
-  def add_event; end
+  def add_event
+    build_event(params[:id], params[:coordinates], params[:type] || 'fastest')
+    render json: { message: 'Event successfully added' }
+  end
+
+  def picks
+    render json: { picks: fetch_picks(params[:id]) }
+  end
+
+  private
+
+  def player_params
+    params.permit(:id, :game, players: [],)
+  end
 end

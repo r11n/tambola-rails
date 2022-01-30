@@ -43,7 +43,7 @@ class Game
     @sub_sequences = []
     9.times do |i|
       @sub_sequences.push(
-        SEQUENCE[(10 * i) + 1, 10].permutation(3).to_a.sample(count)
+        SEQUENCE[(10 * i) + 1, 10].combination(3).to_a.sample(count)
       )
     end
   end

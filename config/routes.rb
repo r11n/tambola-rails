@@ -9,9 +9,11 @@ Rails.application.routes.draw do
       post :add_event
       post :add_event_winner
       post :auto_play
+      post :picks
     end
     collection do
       delete :clear_all
     end
   end
+  resources :tickets, only: :show
 end

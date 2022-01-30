@@ -7,51 +7,39 @@ class Ticket
   def initialize(numbers)
     @numbers = numbers
     @jproc = proc { |a, b| '+' + (1..b).map { ''.rjust(a, '-') }.join('+') + '+' }
-    generate_sets
-    arrange_grid
+    arrange_ticket
   end
 
   def print_grid
-    Rails.logger.debug @jproc.call(2, 9)
+    Rails.logger.info @jproc.call(2, 9)
     3.times do |a|
       row = row_values.call(a)
-      Rails.logger.debug "|#{row.map { |aa| aa.to_s.rjust(2, ' ') }.join('|')}|"
-      Rails.logger.debug @jproc.call(2, 9)
+      Rails.logger.info "|#{row.map { |aa| aa.to_s.rjust(2, ' ') }.join('|')}|"
+      Rails.logger.info @jproc.call(2, 9)
     end
     nil
   end
 
   private
 
-  def generate_sets
-    @sets = []
-    9.times do |n|
-      @sets << numbers.select { |a| a <= ((n + 1) * 10) && a > (n * 10) }
+  def arrange_ticket
+    t = [Array.new(9), Array.new(9), Array.new(9)]
+    row = 0
+    15.times do |j|
+      row = (j / 5.0).floor
+      col = (numbers[j] / 10.0).floor
+      col = 8 if col == 9
+      t[row][col] = numbers[j]
     end
-    @sets = @sets.sort_by(&:size).reverse
+    build_procs
+    @grid = t.flatten
+    order_columns
   end
 
-  def arrange_grid
-    @grid = Array.new(27)
+  def build_procs
     @row_proc = proc { |row| grid[(row % 3) * 9, 9] }
     @row_values = proc { |row| grid[(row % 3) * 9, 9] }
     @row_size = proc { |row| row_values.call(row).reject(&:nil?).size }
-    @sets.each do |set|
-      arrange_set(set)
-    end
-    check_rows
-  end
-
-  def arrange_set(set)
-    set_column(*set) if set.size == 3
-    return if set.size == 3
-
-    set.each do |number|
-      indicator = number % 10
-      assign_number(2, number) if [8, 9, 0].include? indicator
-      assign_number(1, number) if [5, 6, 7].include? indicator
-      assign_number(0, number) if [1, 2, 3, 4].include? indicator
-    end
   end
 
   def check_rows

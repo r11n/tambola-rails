@@ -7,7 +7,7 @@ module GameManager
   include GameCleaner
 
   STORAGE_DIR = Rails.public_path.join('games')
-  GAME_STATUSES = %w[started completed].freeze
+  GAME_STATUSES = %w[started in_progress completed].freeze
   GENERAL_EVENTS = [
     { name: 'Jaldi 5', position_based: false, required_count: 5 },
     {
@@ -41,9 +41,22 @@ module GameManager
     delete_picks
   end
 
-  def build_player(id, name); end
-
-  def build_players(id, name = []); end
+  def build_players(id, names = [])
+    load_game(id)
+    check_available_slots
+    names.each do |name|
+      ind = game_data['free_indexes'].shift
+      game_data['users'].push(
+        {
+          name: name,
+          code: "#{id}#{ind}",
+          claimed_index: ind,
+          join_code: "#{current_pin.to_i.to_s(36)}-#{id}#{ind}"
+        }
+      )
+    end
+    write_game(id)
+  end
 
   def build_event(id, coordinates, type = 'fastest'); end
 
@@ -55,6 +68,22 @@ module GameManager
     raise GameRecordMissingError unless file_exists?(fname_for(id))
 
     delete_file(fname_for(id))
+  end
+
+  def fetch_ticket(id, join_code)
+    load_game(id)
+    user = game_data['users'].select { |a| a['join_code'] == join_code }[0]
+    GameRecordMissingError if user.blank?
+
+    {
+      ticket: game_data['ticket_grids'][user['claimed_index']],
+      user: user
+    }
+  end
+
+  def fetch_picks(id)
+    load_game(id)
+    game_data['pick_sequence']
   end
 
   private
@@ -69,8 +98,16 @@ module GameManager
   # writes game data back into file
   def write_game(id = game_id)
     file = File.open(storage_path.join(fname_for(id)), 'w')
+    file.rewind
     file.write JSON.generate(game_data)
+    file.truncate(file.pos)
     file.close
+  end
+
+  def check_available_slots(count = 1)
+    raise GameNoFreeSlotsError if game_data['free_indexes'].size < count
+
+    raise GameInProgressError if game_data['status'] == 'in_progress'
   end
 
   # generates game data
@@ -79,7 +116,7 @@ module GameManager
     @game_data = game.game_hash.tap do |hash|
       hash['users'] = []
       hash['free_indexes'] = (1..game.count).to_a
-      hash['pick_sequence'] = Game.generate_number_outcome
+      hash['pick_sequence'] = GameV2.generate_number_outcome
       hash['current_pick'] = nil
       hash['events'] = GENERAL_EVENTS
       hash['status'] = 'started'
@@ -97,12 +134,26 @@ module GameManager
   end
 
   def generate_game(count)
-    @game = Game.new count
+    @game = GameV2.new count
   end
 
   # Custom error for missing game
   class GameRecordMissingError < StandardError
     def initialize(msg = 'game not found or deleted')
+      super
+    end
+  end
+
+  # Custom error for in progress game
+  class GameInProgressError < StandardError
+    def initialize(msg = 'game is in progress')
+      super
+    end
+  end
+
+  # Custom error for in free slots
+  class GameNoFreeSlotsError < StandardError
+    def initialize(msg = 'all game slots are already claimed')
       super
     end
   end
